@@ -1,6 +1,8 @@
 #include <iostream>
 #include "muapp.h"
 
+static uint32_t image[64 * 64];
+
 void draw(muapp_t* app) {
     static char buf[1024] = "TEXT";
 	mu_Context* ctx = app->ctx;
@@ -30,6 +32,8 @@ void draw(muapp_t* app) {
             mu_set_focus(ctx, ctx->last_id);
         }
 
+		// muapp_image(app, 64, 64, image);
+
         mu_end_window(ctx);
     } else {
 		muapp_stop(app, 0);
@@ -41,6 +45,12 @@ void draw(muapp_t* app) {
 int main(int argc, const char* argv[]) {
 	muapp_t app;
 	muapp_init(&app);
+
+	for (int i = 0; i < 64; ++i) {
+		for (int j = 0; j < 64; ++j) {
+			image[64 * i + j] = i * 3 + 256 * 3 * j + 65536 * 50;
+		}
+	}
 
     return muapp_start(&app, argc, argv, draw);
 }

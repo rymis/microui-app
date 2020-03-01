@@ -76,8 +76,8 @@ uint16_t tb_col(mu_Color color) {
 }
 
 static void tb_draw_text(struct tb_ctx *ctx, const char *text, mu_Vec2 pos, mu_Color color) {
-    int left = pos.x;
-    int top = pos.y;
+    int left = pos.x / 8;
+    int top = pos.y / 8;
     uint16_t col = tb_col(color);
 
     uint32_t ch;
@@ -91,32 +91,32 @@ static void tb_draw_text(struct tb_ctx *ctx, const char *text, mu_Vec2 pos, mu_C
 }
 
 static void tb_draw_rect(struct tb_ctx *ctx, mu_Rect rect, mu_Color color) {
-    int left = rect.x;
-    int top = rect.y;
-    int right = (rect.x + rect.w);
-    int bottom = (rect.y + rect.h);
+    int left = rect.x / 8;
+    int top = rect.y / 8;
+    int right = (rect.x + rect.w) / 8;
+    int bottom = (rect.y + rect.h) / 8;
     uint16_t col = tb_col(color);
     uint16_t white = TB_WHITE;
     int x, y;
 
-    for (y = top; y <= bottom; ++y) {
-        for (x = left; x <= right; ++x) {
+    for (y = top; y < bottom; ++y) {
+        for (x = left; x < right; ++x) {
             tb_ctx_set(ctx, x, y, ' ', &white, &col);
         }
     }
 }
 
 static void tb_draw_icon(struct tb_ctx *ctx, int id, mu_Rect rect, mu_Color color) {
-    int left = rect.x;
-    int top = rect.y;
-    int right = (rect.x + rect.w);
-    int bottom = (rect.y + rect.h);
+    int left = rect.x / 8;
+    int top = rect.y / 8;
+    int right = (rect.x + rect.w) / 8;
+    int bottom = (rect.y + rect.h) / 8;
     uint16_t col = tb_col(color);
     uint16_t white = TB_WHITE;
     int x, y;
 
-    for (y = top; y <= bottom; ++y) {
-        for (x = left; x <= right; ++x) {
+    for (y = top; y < bottom; ++y) {
+        for (x = left; x < right; ++x) {
             tb_ctx_set(ctx, x, y, ' ', &white, &col);
         }
     }
@@ -135,10 +135,10 @@ static void tb_draw_icon(struct tb_ctx *ctx, int id, mu_Rect rect, mu_Color colo
 }
 
 static void tb_set_clip_rect(struct tb_ctx *ctx, mu_Rect rect) {
-    int left = rect.x;
-    int top = rect.y;
-    int right = rect.x + rect.w;
-    int bottom = rect.y + rect.h;
+    int left = rect.x / 8;
+    int top = rect.y / 8;
+    int right = (rect.x + rect.w) / 8;
+    int bottom = (rect.y + rect.h) / 8;
 
     ctx->sc_left = left;
     ctx->sc_right = right;
@@ -174,12 +174,12 @@ static int tb_run(muapp_t* app, int argc, const char *argv[], muapp_draw_t draw)
     tb_style.colors[MU_COLOR_BASEFOCUS] = mu_color(150, 150, 150, 0);
     tb_style.colors[MU_COLOR_SCROLLBASE] = mu_color(0, 0, 255, 0);
     tb_style.colors[MU_COLOR_SCROLLTHUMB] = mu_color(0, 255, 255, 0);
-    tb_style.padding = 0;
-    tb_style.spacing = 0;
-    tb_style.indent = 0;
-    tb_style.title_height = 1;
-    tb_style.scrollbar_size = 1;
-    tb_style.thumb_size = 1;
+    tb_style.padding = 8;
+    tb_style.spacing = 8;
+    tb_style.indent = 8;
+    tb_style.title_height = 8;
+    tb_style.scrollbar_size = 8;
+    tb_style.thumb_size = 8;
 
     for (;;) {
         // Handle events:
@@ -194,19 +194,24 @@ static int tb_run(muapp_t* app, int argc, const char *argv[], muapp_draw_t draw)
             } else if (ev.key == TB_KEY_BACKSPACE) {
                 mu_input_keydown(ctx, MU_KEY_BACKSPACE);
                 mu_input_keyup(ctx, MU_KEY_BACKSPACE);
-            } else {
-
+            } else if (ev.ch) {
+				char kbuf[32];
+				int l = tb_utf8_unicode_to_char(kbuf, ev.ch);
+				if (l > 0) {
+					kbuf[l] = 0;
+					mu_input_text(ctx, kbuf);
+				}
             }
         break;
 
         case TB_EVENT_MOUSE:
             if (ev.mod == TB_MOD_MOTION) {
-                mu_input_mousemove(ctx, ev.x, ev.y);
+                mu_input_mousemove(ctx, ev.x * 8, ev.y * 8);
             }
             if (ev.key == TB_KEY_MOUSE_LEFT) {
-                mu_input_mousedown(ctx, ev.x, ev.y, MU_MOUSE_LEFT);
+                mu_input_mousedown(ctx, ev.x * 8, ev.y * 8, MU_MOUSE_LEFT);
             } else if (ev.key == TB_KEY_MOUSE_RELEASE) {
-                mu_input_mouseup(ctx, ev.x, ev.y, MU_MOUSE_LEFT);
+                mu_input_mouseup(ctx, ev.x * 8, ev.y * 8, MU_MOUSE_LEFT);
             }
         break;
 

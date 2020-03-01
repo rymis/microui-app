@@ -77,3 +77,29 @@ void muapp_stop(muapp_t* app, int code) {
 	app->exit_code = code;
 }
 
+void muapp_draw_image(muapp_t* app, mu_Rect rect, const void* data) {
+	mu_Command* cmd;
+	size_t idx = app->images_size++;
+	app->images[idx].data = data;
+	app->images[idx].width = rect.w;
+	app->images[idx].height = rect.h;
+	if (rect.w > 0 && rect.h > 0) {
+		cmd = mu_push_command(app->ctx, MUAPP_COMMAND_IMG, sizeof(mu_RectCommand));
+		cmd->rect.rect = rect;
+		cmd->rect.color.r = idx;
+	}
+}
+
+void muapp_image(muapp_t* app, int width, int height, const void* data) {
+	mu_Rect rect;
+	rect.x = 0;
+	rect.y = 0;
+	rect.w = width;
+	rect.h = height;
+
+	mu_layout_set_next(app->ctx, rect, 1 /* RELATIVE */);
+	mu_Rect r = mu_layout_next(app->ctx);
+
+	muapp_draw_image(app, r, data);
+}
+
