@@ -4,8 +4,10 @@ FIND_PACKAGE(X11)
 PKG_CHECK_MODULES(SDL sdl2 gl)
 
 ADD_LIBRARY(microrender
-    microui.c renderer.c
-    render_sdl.c render_sdl_main.c
+    microui.c muapp.c
+    render_sdl.c
+    render_x11.c
+    render_gdi.c
     termbox/src/utf8.c termbox/src/termbox.c render_termbox.c
 )
 

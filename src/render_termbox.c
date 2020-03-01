@@ -1,6 +1,7 @@
-#include "renderer.h"
+#include "muapp.h"
 #include <stdlib.h>
 #include <string.h>
+#include <unistd.h>
 #include "./termbox/src/termbox.h"
 
 static int text_width(mu_Font font, const char *text, int len) {
@@ -145,16 +146,14 @@ static void tb_set_clip_rect(struct tb_ctx *ctx, mu_Rect rect) {
     ctx->sc_bottom = bottom;
 }
 
-int microui_termbox_run(int argc, const char *argv[], int (*process_frame)(mu_Context *, void*), void* data) {
+static int tb_run(muapp_t* app, int argc, const char *argv[], muapp_draw_t draw) {
     struct tb_event ev;
-    int quit = 0;
 
     tb_init();
     tb_select_output_mode(TB_OUTPUT_256);
     tb_select_input_mode(TB_INPUT_ESC | TB_INPUT_MOUSE);
 
-    mu_Context *ctx = malloc(sizeof(mu_Context));
-    mu_init(ctx);
+    mu_Context *ctx = app->ctx;
     ctx->text_width = text_width;
     ctx->text_height = text_height;
 
@@ -188,7 +187,7 @@ int microui_termbox_run(int argc, const char *argv[], int (*process_frame)(mu_Co
         switch (evtype) {
         case TB_EVENT_KEY:
             if (ev.key == TB_KEY_ESC) {
-                quit = 1;
+                muapp_stop(app, 0);
             } else if (ev.key == TB_KEY_ENTER) {
                 mu_input_keydown(ctx, MU_KEY_RETURN);
                 mu_input_keyup(ctx, MU_KEY_RETURN);
@@ -215,8 +214,10 @@ int microui_termbox_run(int argc, const char *argv[], int (*process_frame)(mu_Co
         break;
         }
 
-        if (quit || !process_frame(ctx, data))
+        if (app->exit_code != -1000)
             break;
+
+		draw(app);
 
         tb_clear();
 
@@ -236,8 +237,22 @@ int microui_termbox_run(int argc, const char *argv[], int (*process_frame)(mu_Co
 
     tb_shutdown();
 
-    free(ctx);
-
     return 0;
 }
+
+static int tb_is_supported(int argc, const char* argv[]) {
+	if (isatty(1))
+		return 1;
+	return 0;
+}
+
+static struct muapp_render_st termbox_render = {
+	MUAPP_TEXTMODE,
+	tb_is_supported,
+	tb_run
+};
+
+struct muapp_render_st* muapp_get_render_termbox() {
+	return &termbox_render;
+};
 

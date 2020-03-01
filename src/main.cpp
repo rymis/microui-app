@@ -1,8 +1,9 @@
 #include <iostream>
-#include "renderer.h"
+#include "muapp.h"
 
-int draw(mu_Context* ctx, void*) {
+void draw(muapp_t* app) {
     static char buf[1024] = "TEXT";
+	mu_Context* ctx = app->ctx;
 
     mu_begin(ctx);
     int lay[2] = { 60, -1, };
@@ -30,17 +31,17 @@ int draw(mu_Context* ctx, void*) {
         }
 
         mu_end_window(ctx);
-        mu_end(ctx);
-
-        return 1;
-    }
+    } else {
+		muapp_stop(app, 0);
+	}
 
     mu_end(ctx);
-
-    return 0;
 }
 
 int main(int argc, const char* argv[]) {
-    return microui_run(argc, argv, draw, NULL);
+	muapp_t app;
+	muapp_init(&app);
+
+    return muapp_start(&app, argc, argv, draw);
 }
 
