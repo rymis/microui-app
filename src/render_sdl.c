@@ -1,3 +1,5 @@
+#if USE_SDL
+
 #include <SDL2/SDL.h>
 #include <SDL2/SDL_opengl.h>
 #include <assert.h>
@@ -23,7 +25,7 @@ static void sdl_destroy(struct CTX* sdl) {
 	SDL_DestroyWindow(sdl->window);
 }
 
-static void sdl_init(muapp_t* app, struct CTX* sdl) {
+static int sdl_init(muapp_t* app, struct CTX* sdl) {
 	/* init SDL window */
 	sdl->width = 800;
 	sdl->height = 600;
@@ -52,6 +54,8 @@ static void sdl_init(muapp_t* app, struct CTX* sdl) {
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
 	assert(glGetError() == 0);
+
+	return 0;
 }
 
 static void sdl_flush(struct CTX* sdl) {
@@ -217,8 +221,6 @@ static int text_height(mu_Font font) {
 
 static int sdl_run(muapp_t* app, int argc, const char *argv[], muapp_draw_t draw) {
   static float bg[3] = { 90, 95, 100 };
-  /* init SDL and renderer */
-  SDL_Init(SDL_INIT_EVERYTHING);
   struct CTX sdl;
   sdl_init(app, &sdl);
 
@@ -282,6 +284,11 @@ static int sdl_run(muapp_t* app, int argc, const char *argv[], muapp_draw_t draw
 }
 
 static int sdl_is_supported(int argc, const char* argv[]) {
+	/* init SDL and renderer */
+	if (SDL_Init(SDL_INIT_EVERYTHING) != 0) {
+		return 0;
+	}
+
 	return 1;
 }
 
@@ -295,3 +302,12 @@ struct muapp_render_st* muapp_get_render_sdl() {
 	return &sdl_render;
 }
 
+#else
+
+#include <stdlib.h>
+
+struct muapp_render_st* muapp_get_render_sdl() {
+	return NULL;
+}
+
+#endif
